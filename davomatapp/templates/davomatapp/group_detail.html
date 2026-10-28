@@ -1,0 +1,204 @@
+{% extends "davomatapp/base.html" %}
+{% block title %}{{ group.name }} — davomat{% endblock %}
+{% block content %}
+<style>
+  col.col-today { background:var(--primary-soft); }
+  col.col-weekend { background:var(--surface-2); }
+  th.th-today { background:var(--btn) !important; color:#fff !important; }
+
+  .pill { display:inline-block; min-width:48px; padding:3px 10px; border-radius:999px; font-weight:700; font-size:12px; }
+  .pill.good { background:var(--green-bg); color:var(--green); }
+  .pill.mid  { background:var(--amber-bg); color:var(--amber); }
+  .pill.bad  { background:var(--red-bg); color:var(--red); }
+  .pill.none { background:var(--surface-2); color:var(--muted); border:1px solid var(--line); }
+
+  .legend { display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--muted); align-items:center; }
+  .legend .dot { display:inline-grid; place-items:center; width:22px; height:22px; border-radius:7px;
+                 font-weight:700; font-size:12px; margin-right:6px; vertical-align:middle; }
+  .num-ok { color:var(--green); font-weight:700; }
+  .num-no { color:var(--red); font-weight:700; }
+
+  .edit-link { text-decoration:none; margin-left:8px; color:var(--muted); opacity:0; transition:.15s; font-size:16px; }
+  tr:hover .edit-link { opacity:1; }
+  .edit-link:hover { color:var(--primary); }
+  .stat-link { color:inherit; text-decoration:none; }
+  .stat-link:hover { color:var(--primary); }
+
+  .modal { position:fixed; inset:0; background:rgba(5,8,18,.6); backdrop-filter:blur(4px);
+           display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .modal[hidden] { display:none; }
+  .modal-box { background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:26px; width:100%;
+               max-width:520px; max-height:90vh; overflow:auto; position:relative; box-shadow:var(--shadow-lg); }
+  .modal-close { position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:10px; border:1px solid var(--line);
+                 background:var(--surface-2); cursor:pointer; color:var(--muted); font-size:20px; display:grid; place-items:center; }
+  .modal-close:hover { color:var(--red); border-color:var(--red); }
+</style>
+
+<div class="card">
+  <div class="eyebrow">Attendance Details</div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1 style="margin:0">{{ group.name }}</h1>
+    <span class="badge"><iconify-icon icon="solar:calendar-bold-duotone"></iconify-icon> {{ month_title }}</span>
+  </div>
+
+  <div class="toolbar">
+    <a class="btn secondary" href="?oy={{ prev_month }}"><iconify-icon icon="solar:alt-arrow-left-linear"></iconify-icon> Oldingi</a>
+    <form method="get" style="display:inline-flex;gap:6px;margin:0">
+      <input type="month" name="oy" value="{{ month_value }}">
+      <button class="btn secondary" type="submit">Ko'rish</button>
+    </form>
+    <a class="btn secondary" href="?oy={{ next_month }}">Keyingi <iconify-icon icon="solar:alt-arrow-right-linear"></iconify-icon></a>
+    <span style="flex:1"></span>
+    <a class="btn green" href="{% url 'mark_attendance' group.pk %}?date={{ today|date:'Y-m-d' }}">
+      <iconify-icon icon="solar:clipboard-check-bold-duotone"></iconify-icon> Bugungi davomat</a>
+    <a class="btn secondary" href="{% url 'group_import' group.pk %}">
+      <iconify-icon icon="solar:upload-minimalistic-bold-duotone"></iconify-icon> Fayldan yuklash</a>
+    <a class="btn secondary" href="{% url 'export_csv' group.pk %}?oy={{ month_value }}">
+      <iconify-icon icon="solar:download-minimalistic-bold-duotone"></iconify-icon> CSV</a>
+    <a class="btn secondary" href="{% url 'student_create' group.pk %}">
+      <iconify-icon icon="solar:user-plus-bold-duotone"></iconify-icon> Talaba</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat has-ico">
+      <span class="stat-ico"><iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon></span>
+      <div><b>{{ rows|length }}</b>Talabalar</div>
+    </div>
+    <div class="stat has-ico">
+      <span class="stat-ico amber"><iconify-icon icon="solar:calendar-mark-bold-duotone"></iconify-icon></span>
+      <div><b>{{ lesson_days_count }}</b>Dars o'tilgan kunlar</div>
+    </div>
+  </div>
+</div>
+
+<div class="card table-wrap">
+  <div class="legend" style="padding:16px 20px 12px">
+    <span><span class="dot" style="background:var(--green-bg);color:var(--green)">✓</span>Keldi</span>
+    <span><span class="dot" style="background:var(--red-bg);color:var(--red)">✗</span>Kelmadi</span>
+    <span><span class="dot" style="background:var(--surface-2);border:1px solid var(--line)"></span>Belgilanmagan</span>
+    <span>Kun raqamini bossangiz, o'sha kun davomatini belgilaysiz</span>
+  </div>
+
+  <table>
+    <colgroup>
+      <col><col><col><col>
+      {% for d in days %}<col class="{% if d == today %}col-today{% elif d|date:'w' == '0' or d|date:'w' == '6' %}col-weekend{% endif %}">{% endfor %}
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Talaba</th>
+        <th>Keldi</th><th>Kelmadi</th><th>Foiz</th>
+        {% for d in days %}
+          <th{% if d == today %} class="th-today"{% endif %}>
+            <a style="color:inherit;text-decoration:none"
+               href="{% url 'mark_attendance' group.pk %}?date={{ d|date:'Y-m-d' }}"
+               title="{{ d|date:'d.m.Y' }} davomatini belgilash">{{ d.day }}</a>
+          </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td class="name">
+          <span class="avatar">{{ r.student.full_name|slice:":1" }}</span><a href="#" class="stat-link"
+             data-url="{% url 'student_stats' r.student.pk %}" title="Statistikani ko'rish">{{ r.student.full_name }}</a>
+          <a href="{% url 'student_update' r.student.pk %}" class="edit-link" title="Tahrirlash">
+            <iconify-icon icon="solar:pen-2-bold-duotone"></iconify-icon></a>
+        </td>
+        <td class="num-ok">{{ r.present }}</td>
+        <td class="num-no">{{ r.absent }}</td>
+        <td>
+          {% if r.percent is not None %}
+            <span class="pill {% if r.percent >= 80 %}good{% elif r.percent >= 50 %}mid{% else %}bad{% endif %}">{{ r.percent }}%</span>
+          {% else %}
+            <span class="pill none">—</span>
+          {% endif %}
+        </td>
+        {% for c in r.cells %}
+          {% if c is True %}<td class="p">✓</td>{% elif c is False %}<td class="a">✗</td>{% else %}<td></td>{% endif %}
+        {% endfor %}
+      </tr>
+    {% empty %}
+      <tr><td colspan="40" style="padding:34px">Bu guruhda talaba yo'q. “Talaba” yoki “Fayldan yuklash” tugmasidan foydalaning.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="stat-modal" class="modal" hidden>
+  <div class="modal-box">
+    <button type="button" class="modal-close" id="modal-close" aria-label="Yopish">
+      <iconify-icon icon="solar:close-circle-linear"></iconify-icon>
+    </button>
+    <div id="modal-body">Yuklanmoqda…</div>
+  </div>
+</div>
+
+{% verbatim %}
+<script>
+  const modal = document.getElementById('stat-modal');
+  const body = document.getElementById('modal-body');
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+    });
+  }
+
+  function pct(v) { return v === null ? '—' : v + '%'; }
+
+  function render(d) {
+    var rows = d.recent.map(function (r) {
+      return '<tr><td>' + esc(r.date) + '</td>' +
+        '<td class="' + (r.present ? 'p' : 'a') + '">' + (r.present ? 'Keldi' : 'Kelmadi') + '</td>' +
+        '<td style="text-align:left">' + esc(r.note) + '</td></tr>';
+    }).join('') || '<tr><td colspan="3">Hali yozuv yo\'q.</td></tr>';
+
+    body.innerHTML =
+      '<div style="display:flex;gap:12px;align-items:center;padding-right:40px">' +
+        '<span class="avatar" style="width:48px;height:48px;font-size:19px;margin:0">' + esc(d.name.charAt(0)) + '</span>' +
+        '<div><h2 style="margin:0">' + esc(d.name) + '</h2>' +
+        '<div class="muted">' + esc(d.group) + (d.phone ? ' · ' + esc(d.phone) : '') + '</div></div>' +
+      '</div>' +
+      '<h3 style="margin:20px 0 8px;font-size:12px;color:var(--muted);letter-spacing:.08em">JAMI</h3>' +
+      '<div class="stats">' +
+        '<div class="stat"><b style="color:var(--green)">' + d.present + '</b>Keldi</div>' +
+        '<div class="stat"><b style="color:var(--red)">' + d.absent + '</b>Kelmadi</div>' +
+        '<div class="stat"><b>' + pct(d.percent) + '</b>Foiz</div>' +
+      '</div>' +
+      '<h3 style="margin:20px 0 8px;font-size:12px;color:var(--muted);letter-spacing:.08em">' + esc(d.month_title).toUpperCase() + '</h3>' +
+      '<div class="stats">' +
+        '<div class="stat"><b style="color:var(--green)">' + d.month_present + '</b>Keldi</div>' +
+        '<div class="stat"><b style="color:var(--red)">' + d.month_absent + '</b>Kelmadi</div>' +
+        '<div class="stat"><b>' + pct(d.month_percent) + '</b>Foiz</div>' +
+      '</div>' +
+      '<h3 style="margin:20px 0 8px;font-size:12px;color:var(--muted);letter-spacing:.08em">SO\'NGGI DARSLAR</h3>' +
+      '<div class="table-wrap" style="border:1px solid var(--line);border-radius:12px"><table><thead><tr><th>Sana</th><th>Holat</th><th>Izoh</th></tr></thead><tbody>' +
+        rows + '</tbody></table></div>' +
+      '<div class="toolbar" style="margin-top:18px">' +
+        '<a class="btn secondary" href="' + esc(d.detail_url) + '"><iconify-icon icon="solar:document-text-bold-duotone"></iconify-icon> To\'liq tarix</a>' +
+        '<a class="btn secondary" href="' + esc(d.edit_url) + '"><iconify-icon icon="solar:pen-2-bold-duotone"></iconify-icon> Tahrirlash</a>' +
+      '</div>';
+  }
+
+  function closeModal() { modal.hidden = true; }
+
+  document.querySelectorAll('.stat-link').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      body.textContent = 'Yuklanmoqda…';
+      modal.hidden = false;
+      fetch(link.dataset.url)
+        .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+        .then(render)
+        .catch(function () { body.textContent = 'Ma\'lumotni yuklab bo\'lmadi.'; });
+    });
+  });
+
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+</script>
+{% endverbatim %}
+{% endblock %}

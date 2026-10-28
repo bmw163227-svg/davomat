@@ -1,0 +1,101 @@
+{% extends "davomatapp/base.html" %}
+{% block title %}Guruhlar{% endblock %}
+{% block content %}
+<style>
+  .gc-head { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .gc-ico { width:44px; height:44px; border-radius:14px; display:grid; place-items:center; font-size:24px;
+            background:var(--primary-soft); color:var(--primary); flex-shrink:0; }
+  .gc-title { flex:1; min-width:0; }
+  .gc-title h2 { margin:0; }
+  .gc-title h2 a { color:inherit; text-decoration:none; }
+  .gc-title h2 a:hover { color:var(--primary); }
+  .progress { height:9px; background:var(--red-bg); border-radius:99px; overflow:hidden; margin-bottom:12px; }
+  .progress span { display:block; height:100%; background:linear-gradient(90deg,#4ade80,#16a34a); border-radius:99px; width:0; }
+  .mini { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .mini div { background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:8px 10px;
+              font-size:12px; color:var(--muted); }
+  .mini b { display:block; font-size:19px; color:var(--text); font-family:Manrope,Inter,sans-serif; }
+  .absent-list { margin-top:10px; font-size:13px; color:var(--red); display:flex; gap:6px; align-items:flex-start; }
+  .group-card { transition:.2s; }
+  .group-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); border-color:var(--primary); }
+</style>
+
+<div class="toolbar" style="justify-content:space-between;margin-top:0">
+  <div>
+    <div class="eyebrow">{{ today|date:"d.m.Y" }}</div>
+    <h1>Bugungi davomat</h1>
+    <div class="muted">Guruhlar kesimida</div>
+  </div>
+  <a class="btn" href="{% url 'group_create' %}"><iconify-icon icon="solar:add-circle-bold-duotone"></iconify-icon> Yangi guruh</a>
+</div>
+
+<div class="stats" style="margin-bottom:22px">
+  <div class="stat has-ico">
+    <span class="stat-ico"><iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon></span>
+    <div><b>{{ total.students }}</b>Jami talaba</div>
+  </div>
+  <div class="stat has-ico">
+    <span class="stat-ico green"><iconify-icon icon="solar:check-circle-bold-duotone"></iconify-icon></span>
+    <div><b>{{ total.present }}</b>Bugun keldi</div>
+  </div>
+  <div class="stat has-ico">
+    <span class="stat-ico red"><iconify-icon icon="solar:close-circle-bold-duotone"></iconify-icon></span>
+    <div><b>{{ total.absent }}</b>Kelmadi</div>
+  </div>
+  <div class="stat has-ico">
+    <span class="stat-ico amber"><iconify-icon icon="solar:clock-circle-bold-duotone"></iconify-icon></span>
+    <div><b>{{ total.unmarked }}</b>Belgilanmagan</div>
+  </div>
+  <div class="stat has-ico">
+    <span class="stat-ico"><iconify-icon icon="solar:pie-chart-2-bold-duotone"></iconify-icon></span>
+    <div><b>{% if total.percent is not None %}{{ total.percent }}%{% else %}—{% endif %}</b>Bugungi foiz</div>
+  </div>
+</div>
+
+<div class="grid">
+  {% for g in groups %}
+    <div class="card group-card">
+      <div class="gc-head">
+        <span class="gc-ico"><iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon></span>
+        <div class="gc-title">
+          <h2><a href="{% url 'group_detail' g.pk %}">{{ g.name }}</a></h2>
+          <div class="muted">{{ g.description|default:"Izoh yo'q" }}</div>
+        </div>
+        <span class="badge">{{ g.student_count }} ta</span>
+      </div>
+
+      {% if g.marked %}
+        <div class="progress"><span data-w="{{ g.percent_today }}"></span></div>
+        <div class="mini">
+          <div><b style="color:var(--green)">{{ g.present_today }}</b>Keldi</div>
+          <div><b style="color:var(--red)">{{ g.absent_today }}</b>Kelmadi</div>
+          <div><b>{{ g.percent_today }}%</b>Foiz</div>
+        </div>
+        {% if g.unmarked_today %}
+          <div class="muted" style="margin-top:10px">Belgilanmagan: {{ g.unmarked_today }} ta</div>
+        {% endif %}
+        {% if g.absent_names %}
+          <div class="absent-list">
+            <iconify-icon icon="solar:user-cross-bold-duotone"></iconify-icon>
+            <span>{{ g.absent_names|join:", " }}</span>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="muted" style="display:flex;gap:8px;align-items:center;padding:10px 0">
+          <iconify-icon icon="solar:clock-circle-bold-duotone" style="font-size:20px"></iconify-icon>
+          Bugun davomat hali belgilanmagan.
+        </div>
+      {% endif %}
+
+      <div class="toolbar" style="margin-bottom:0">
+        <a class="btn green" href="{% url 'mark_attendance' g.pk %}?date={{ today|date:'Y-m-d' }}">
+          <iconify-icon icon="solar:clipboard-check-bold-duotone"></iconify-icon> Davomat</a>
+        <a class="btn secondary" href="{% url 'group_detail' g.pk %}">
+          <iconify-icon icon="solar:calendar-mark-bold-duotone"></iconify-icon> Jadval</a>
+      </div>
+    </div>
+  {% empty %}
+    <div class="card">Hozircha guruh yo'q. “Yangi guruh” tugmasini bosing.</div>
+  {% endfor %}
+</div>
+{% endblock %}

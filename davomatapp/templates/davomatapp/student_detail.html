@@ -1,0 +1,30 @@
+{% extends "davomatapp/base.html" %}
+{% block title %}{{ student.full_name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>{{ student.full_name }}</h1>
+  <div class="muted">Guruh: <a href="{% url 'group_detail' student.group.pk %}">{{ student.group.name }}</a>
+    {% if student.phone %} · {{ student.phone }}{% endif %}</div>
+  <div class="stats" style="margin-top:12px">
+    <div class="stat"><b style="color:var(--green)">{{ present }}</b>Keldi</div>
+    <div class="stat"><b style="color:var(--red)">{{ absent }}</b>Kelmadi</div>
+    <div class="stat"><b>{% if percent is not None %}{{ percent }}%{% else %}—{% endif %}</b>Davomat foizi</div>
+  </div>
+</div>
+<div class="card table-wrap">
+  <table>
+    <thead><tr><th>Sana</th><th>Holat</th><th>Izoh</th></tr></thead>
+    <tbody>
+      {% for r in records %}
+        <tr>
+          <td>{{ r.date|date:"d.m.Y" }}</td>
+          {% if r.is_present %}<td class="p">Keldi</td>{% else %}<td class="a">Kelmadi</td>{% endif %}
+          <td style="text-align:left">{{ r.note|default:"" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="3">Hali yozuv yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

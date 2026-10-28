@@ -1,0 +1,79 @@
+{% extends "davomatapp/base.html" %}
+{% block title %}Davomat belgilash{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="eyebrow">{{ group.name }}</div>
+  <h1>Davomat belgilash</h1>
+
+  <form method="get" class="toolbar">
+    <label for="d" class="muted" style="margin:0">Dars sanasi:</label>
+    <input id="d" type="date" name="date" value="{{ lesson_date|date:'Y-m-d' }}" onchange="this.form.submit()">
+    {% if already_saved %}
+      <span class="badge"><iconify-icon icon="solar:info-circle-bold-duotone"></iconify-icon> Bu sana uchun davomat saqlangan, tahrirlash mumkin</span>
+    {% endif %}
+  </form>
+
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="date" value="{{ lesson_date|date:'Y-m-d' }}">
+
+    <div class="toolbar">
+      <button type="button" class="btn secondary" onclick="setAll(true)">
+        <iconify-icon icon="solar:check-circle-bold-duotone"></iconify-icon> Hammasi keldi</button>
+      <button type="button" class="btn secondary" onclick="setAll(false)">
+        <iconify-icon icon="solar:close-circle-bold-duotone"></iconify-icon> Hammasi kelmadi</button>
+      <span class="badge" id="counter"></span>
+    </div>
+
+    {% for it in items %}
+      <div class="row-item">
+        <span class="who">
+          <span class="avatar">{{ it.student.full_name|slice:":1" }}</span>
+          {{ forloop.counter }}. {{ it.student.full_name }}
+          <a href="{% url 'student_update' it.student.pk %}" title="Tahrirlash"
+             style="text-decoration:none;margin-left:8px;color:var(--muted)">
+            <iconify-icon icon="solar:pen-2-bold-duotone"></iconify-icon></a>
+        </span>
+        <label class="switch">
+          <input type="checkbox" name="present_{{ it.student.id }}" {% if it.present %}checked{% endif %}>
+          Qatnashdi
+        </label>
+        <input type="text" name="note_{{ it.student.id }}" value="{{ it.note }}" placeholder="Izoh (ixtiyoriy)">
+      </div>
+    {% empty %}
+      <p>Bu guruhda faol talaba yo'q.
+        <a href="{% url 'student_create' group.pk %}">Talaba qo'shish</a> yoki
+        <a href="{% url 'group_import' group.pk %}">fayldan yuklash</a>.</p>
+    {% endfor %}
+
+    <div class="toolbar" style="margin-top:18px">
+      <button class="btn green" type="submit"><iconify-icon icon="solar:diskette-bold-duotone"></iconify-icon> Saqlash</button>
+      <a class="btn secondary" href="{% url 'group_detail' group.pk %}?oy={{ lesson_date|date:'Y-m' }}">
+        <iconify-icon icon="solar:arrow-left-linear"></iconify-icon> Orqaga</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  function boxes() {
+    return document.querySelectorAll('input[type=checkbox][name^=present_]');
+  }
+
+  function updateCounter() {
+    var all = boxes();
+    var present = 0;
+    all.forEach(function (c) { if (c.checked) present++; });
+    var el = document.getElementById('counter');
+    if (el && all.length) {
+      el.textContent = 'Keldi: ' + present + ' · Kelmadi: ' + (all.length - present);
+    }
+  }
+
+  function setAll(v) {
+    boxes().forEach(function (c) { c.checked = v; });
+    updateCounter();
+  }
+
+  boxes().forEach(function (c) { c.addEventListener('change', updateCounter); });
+  updateCounter();
+</script>
+{% endblock %}

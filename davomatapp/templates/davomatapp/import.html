@@ -1,0 +1,29 @@
+{% extends "davomatapp/base.html" %}
+{% block title %}Fayldan yuklash{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px">
+  <h1>Talabalarni fayldan yuklash</h1>
+  <div class="muted">Guruh: {{ group.name }}</div>
+
+  <p>Fayl formati: <b>.xlsx</b>, <b>.csv</b> yoki <b>.txt</b>. Birinchi ustunda F.I.Sh., ikkinchi ustunda telefon (ixtiyoriy):</p>
+  <div class="table-wrap">
+    <table style="max-width:360px">
+      <thead><tr><th>F.I.Sh.</th><th>Telefon</th></tr></thead>
+      <tbody>
+        <tr><td style="text-align:left">Aliyev Vali</td><td>901234567</td></tr>
+        <tr><td style="text-align:left">Karimova Madina</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted">
+    Sarlavha qatori va tartib raqami ustuni (1, 2, 3...) bo'lsa, o'zi o'tkazib yuboriladi.
+    Guruhda bor ismlar qayta qo'shilmaydi. TXT faylda har qatorga bitta ism yozing.
+  </p>
+
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Yuklash</button>
+    <a class="btn secondary" href="{% url 'group_detail' group.pk %}">Bekor qilish</a>
+  </form>
+</div>
+{% endblock %}

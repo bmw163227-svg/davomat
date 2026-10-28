@@ -1,0 +1,83 @@
+{% extends "davomatapp/base.html" %}
+{% block title %}Boshqaruv paneli{% endblock %}
+{% block content %}
+<style>
+  .panel { display:grid; grid-template-columns:240px minmax(0,1fr); gap:22px; align-items:start; }
+  .side { position:sticky; top:84px; padding:14px; margin:0; }
+  .side .side-title { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+                      color:var(--muted); padding:6px 12px 10px; }
+  .side a { display:flex; gap:11px; align-items:center; padding:10px 12px; border-radius:12px;
+            color:var(--muted); text-decoration:none; font-size:14px; font-weight:500; transition:.15s; margin-bottom:2px; }
+  .side a iconify-icon { font-size:20px; }
+  .side a:hover { background:var(--primary-soft); color:var(--primary); }
+  .side a.active { background:linear-gradient(180deg,var(--btn-hover),var(--btn)); color:#fff;
+                   box-shadow:0 8px 20px rgba(79,70,229,.28); }
+  .side hr { margin:10px 0; }
+
+  .page-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+  .page-head h1 { margin:0; }
+
+  .row-actions { display:flex; gap:6px; justify-content:flex-end; }
+  .row-actions form { margin:0; }
+
+  .filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  .filters input, .filters select { width:auto; min-width:160px; }
+
+  .data { margin:0; }
+  .data th, .data td { text-align:left; white-space:normal; }
+  .data td.right, .data th.right { text-align:right; }
+  .data a.plain { color:inherit; text-decoration:none; font-weight:600; }
+  .data a.plain:hover { color:var(--primary); }
+
+  .tag { display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+  .tag.green { background:var(--green-bg); color:var(--green); }
+  .tag.red   { background:var(--red-bg); color:var(--red); }
+  .tag.amber { background:var(--amber-bg); color:var(--amber); }
+  .tag.blue  { background:var(--primary-soft); color:var(--primary); }
+  .tag.gray  { background:var(--surface-2); color:var(--muted); border:1px solid var(--line); }
+
+  .pager { display:flex; gap:10px; align-items:center; justify-content:center; padding:14px; }
+
+  .chart { display:flex; gap:10px; align-items:flex-end; height:200px; padding-top:6px; }
+  .chart .col { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; }
+  .chart .bar-wrap { flex:1; width:100%; display:flex; align-items:flex-end; background:var(--surface-2);
+                     border-radius:12px; overflow:hidden; border:1px solid var(--line); }
+  .chart .bar { width:100%; background:linear-gradient(180deg,#a5b4fc,#4f46e5); border-radius:10px 10px 0 0; min-height:0; }
+  .chart .val { font-size:12px; font-weight:700; }
+  .chart .lbl { font-size:12px; color:var(--muted); }
+
+  @media (max-width:900px) {
+    .panel { grid-template-columns:1fr; }
+    .side { position:static; display:flex; gap:6px; overflow-x:auto; padding:10px; }
+    .side .side-title, .side hr { display:none; }
+    .side a { white-space:nowrap; margin:0; }
+  }
+</style>
+
+<div class="panel">
+  <aside class="card side">
+    <div class="side-title">Boshqaruv</div>
+    <a href="{% url 'panel_dashboard' %}" class="{% if section == 'dashboard' %}active{% endif %}">
+      <iconify-icon icon="solar:chart-2-bold-duotone"></iconify-icon> Bosh sahifa</a>
+    <a href="{% url 'panel_groups' %}" class="{% if section == 'groups' %}active{% endif %}">
+      <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon> Guruhlar</a>
+    <a href="{% url 'panel_students' %}" class="{% if section == 'students' %}active{% endif %}">
+      <iconify-icon icon="solar:square-academic-cap-bold-duotone"></iconify-icon> Talabalar</a>
+    <a href="{% url 'panel_attendance' %}" class="{% if section == 'attendance' %}active{% endif %}">
+      <iconify-icon icon="solar:calendar-mark-bold-duotone"></iconify-icon> Davomat yozuvlari</a>
+    {% if user.is_superuser %}
+      <a href="{% url 'panel_users' %}" class="{% if section == 'users' %}active{% endif %}">
+        <iconify-icon icon="solar:shield-user-bold-duotone"></iconify-icon> Foydalanuvchilar</a>
+    {% endif %}
+    <hr>
+    <a href="{% url 'group_list' %}"><iconify-icon icon="solar:arrow-left-linear"></iconify-icon> Saytga qaytish</a>
+    {% if user.is_superuser %}
+      <a href="/admin/"><iconify-icon icon="solar:settings-bold-duotone"></iconify-icon> Texnik admin</a>
+    {% endif %}
+  </aside>
+
+  <section>
+    {% block panel %}{% endblock %}
+  </section>
+</div>
+{% endblock %}

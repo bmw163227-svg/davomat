@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Davomat tizimi{% endblock %}</title>
+
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.iconify.design" crossorigin>
+
+<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"></noscript>
+
+<script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js" defer></script>
+
+<style>
+  :root {
+    --bg:#f4f5fb; --surface:#ffffff; --surface-2:#f8f9fd; --text:#0b1020; --muted:#64748b;
+    --line:#e6e9f2; --line-strong:#cbd2e1; --glow:rgba(99,102,241,.10);
+    --primary:#6366f1; --primary-soft:#eef0ff; --btn:#4f46e5; --btn-hover:#4338ca;
+    --green:#16a34a; --green-bg:#dcfce7; --red:#e11d48; --red-bg:#ffe4e6;
+    --amber:#d97706; --amber-bg:#fef3c7;
+    --header-bg:rgba(255,255,255,.78); --radius:18px;
+    --shadow:0 1px 2px rgba(15,23,42,.04), 0 6px 20px rgba(15,23,42,.05);
+    --shadow-lg:0 12px 36px rgba(15,23,42,.12);
+    color-scheme: light;
+  }
+  [data-theme="dark"] {
+    --bg:#0a0e1a; --surface:#111729; --surface-2:#0d1322; --text:#e7ebf7; --muted:#8b97b1;
+    --line:#1f2a44; --line-strong:#33405f; --glow:rgba(99,102,241,.20);
+    --primary:#818cf8; --primary-soft:rgba(129,140,248,.14); --btn:#4f46e5; --btn-hover:#6366f1;
+    --green:#4ade80; --green-bg:rgba(34,197,94,.16); --red:#fb7185; --red-bg:rgba(244,63,94,.16);
+    --amber:#fbbf24; --amber-bg:rgba(251,191,36,.14);
+    --header-bg:rgba(10,14,26,.78);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
+    --shadow-lg:0 16px 40px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--text);
+         background:radial-gradient(900px 420px at 12% -8%, var(--glow), transparent), var(--bg);
+         background-attachment:fixed; line-height:1.5; -webkit-font-smoothing:antialiased;
+         transition:background-color .25s, color .25s; }
+  a { color:var(--primary); }
+  iconify-icon { vertical-align:-0.2em; flex-shrink:0; }
+  h1, h2, h3, .brand { font-family:Manrope,Inter,sans-serif; }
+
+  /* ---------- Yuqori panel ---------- */
+  header { position:sticky; top:0; z-index:30; background:var(--header-bg); backdrop-filter:blur(14px);
+           border-bottom:1px solid var(--line); padding:10px 28px; display:flex;
+           justify-content:space-between; align-items:center; gap:12px; }
+  header a { text-decoration:none; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; color:var(--text); letter-spacing:-.02em; }
+  .brand-logo { width:36px; height:36px; border-radius:11px; display:grid; place-items:center; color:#fff; font-size:21px;
+                background:linear-gradient(135deg,#818cf8,#4f46e5); box-shadow:0 6px 16px rgba(79,70,229,.35); }
+  header nav { display:flex; gap:4px; align-items:center; }
+  header nav > a { display:inline-flex; align-items:center; gap:7px; color:var(--muted); font-size:14px; font-weight:500;
+                   padding:8px 12px; border-radius:11px; transition:.15s; }
+  header nav > a iconify-icon { font-size:18px; }
+  header nav > a:hover { background:var(--primary-soft); color:var(--primary); }
+  .icon-btn { width:38px; height:38px; display:grid; place-items:center; border-radius:11px; cursor:pointer;
+              background:var(--surface); border:1px solid var(--line); color:var(--text); font-size:19px; margin-left:6px; transition:.15s; }
+  .icon-btn:hover { border-color:var(--primary); color:var(--primary); transform:rotate(12deg); }
+  .i-sun { display:none; } .i-moon { display:inline-block; }
+  [data-theme="dark"] .i-sun { display:inline-block; } [data-theme="dark"] .i-moon { display:none; }
+
+  main { max-width:1280px; margin:28px auto; padding:0 20px; }
+
+  /* ---------- Kartalar ---------- */
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+          padding:22px; margin-bottom:20px; box-shadow:var(--shadow); transition:background-color .25s, border-color .25s; }
+  h1 { margin:0 0 4px; font-size:28px; font-weight:800; letter-spacing:-.025em; }
+  h2 { margin:0 0 10px; font-size:18px; font-weight:700; letter-spacing:-.015em; }
+  .muted { color:var(--muted); font-size:14px; }
+  .eyebrow { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--primary); }
+
+  /* ---------- Tugmalar ---------- */
+  .btn { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:11px; border:1px solid transparent;
+         background:linear-gradient(180deg,var(--btn-hover),var(--btn)); color:#fff; text-decoration:none; font-size:14px;
+         font-weight:600; cursor:pointer; transition:.15s; font-family:inherit; }
+  .btn iconify-icon { font-size:18px; }
+  .btn:hover { transform:translateY(-1px); box-shadow:0 8px 20px rgba(79,70,229,.30); }
+  .btn.secondary { background:var(--surface); color:var(--text); border-color:var(--line); }
+  .btn.secondary:hover { border-color:var(--primary); color:var(--primary); box-shadow:none; }
+  .btn.green { background:linear-gradient(180deg,#22c55e,#16a34a); }
+  .btn.green:hover { box-shadow:0 8px 20px rgba(22,163,74,.30); }
+  .btn.danger { background:linear-gradient(180deg,#fb7185,#e11d48); }
+  .btn.danger:hover { box-shadow:0 8px 20px rgba(225,29,72,.30); }
+  .btn.sm { padding:6px 10px; font-size:13px; border-radius:9px; }
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:14px 0; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
+  .grid .card { margin-bottom:0; }
+  .badge { display:inline-flex; align-items:center; gap:5px; background:var(--primary-soft); color:var(--primary);
+           border-radius:999px; padding:3px 11px; font-size:12px; font-weight:600; }
+
+  /* ---------- Xabarlar ---------- */
+  .messages { list-style:none; padding:0; margin:0 0 18px; display:grid; gap:8px; }
+  .messages li { display:flex; align-items:center; gap:10px; background:var(--green-bg); color:var(--green);
+                 padding:12px 16px; border-radius:13px; font-size:14px; font-weight:500; }
+  .messages li.error { background:var(--red-bg); color:var(--red); }
+  .messages li iconify-icon { font-size:20px; }
+
+  /* ---------- Statistika ---------- */
+  .stats { display:flex; gap:12px; flex-wrap:wrap; }
+  .stat { background:var(--surface-2); border:1px solid var(--line); border-radius:15px; padding:12px 18px;
+          font-size:13px; color:var(--muted); min-width:100px; }
+  .stat b { font-size:24px; display:block; color:var(--text); letter-spacing:-.02em; line-height:1.2; font-family:Manrope,Inter,sans-serif; }
+  .stat.has-ico { display:flex; align-items:center; gap:12px; }
+  .stat-ico { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; font-size:22px;
+              background:var(--primary-soft); color:var(--primary); }
+  .stat-ico.green { background:var(--green-bg); color:var(--green); }
+  .stat-ico.red { background:var(--red-bg); color:var(--red); }
+  .stat-ico.amber { background:var(--amber-bg); color:var(--amber); }
+
+  .avatar { display:inline-grid; place-items:center; width:32px; height:32px; border-radius:50%; flex-shrink:0;
+            background:var(--primary-soft); color:var(--primary); font-weight:700; font-size:13px;
+            margin-right:10px; vertical-align:middle; text-transform:uppercase; }
+
+  /* ---------- Jadval ---------- */
+  .table-wrap { overflow-x:auto; padding:0; }
+  table { border-collapse:separate; border-spacing:0; width:100%; font-size:13px; }
+  th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:8px 8px;
+           text-align:center; white-space:nowrap; }
+  th:last-child, td:last-child { border-right:0; }
+  thead th { background:var(--surface-2); color:var(--muted); font-size:11px; font-weight:700;
+             text-transform:uppercase; letter-spacing:.05em; padding:12px 8px; }
+  tbody tr:last-child td { border-bottom:0; }
+  tbody tr:hover td:not(.p):not(.a) { background:var(--surface-2); }
+  td.name { text-align:left; position:sticky; left:0; background:var(--surface); z-index:2;
+            font-weight:500; min-width:220px; }
+  thead th:first-child { text-align:left; position:sticky; left:0; z-index:3; }
+  .p { background:var(--green-bg); color:var(--green); font-weight:700; }
+  .a { background:var(--red-bg); color:var(--red); font-weight:700; }
+
+  /* ---------- Formalar ---------- */
+  input[type=text], input[type=date], input[type=password], input[type=month], input[type=file],
+  input[type=number], textarea, select {
+    padding:10px 13px; border:1px solid var(--line-strong); border-radius:11px; font-size:14px;
+    width:100%; max-width:420px; background:var(--surface); color:var(--text); font-family:inherit; transition:.15s; }
+  input:focus, textarea:focus, select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--primary-soft); }
+  input::placeholder { color:var(--muted); }
+  .toolbar input[type=date], .toolbar input[type=month] { width:auto; }
+  form p { margin:0 0 16px; } form label { display:block; font-weight:600; font-size:13px; margin-bottom:6px; }
+  form input[type=checkbox] { width:18px; height:18px; accent-color:var(--btn); vertical-align:middle; margin-right:6px; }
+  .errorlist { color:var(--red); list-style:none; padding:0; margin:4px 0; font-size:13px; }
+  .helptext { color:var(--muted); font-size:12px; }
+  hr { border:0; border-top:1px solid var(--line); }
+
+  /* ---------- Davomat belgilash ---------- */
+  .row-item { display:flex; align-items:center; gap:14px; padding:12px 6px; border-bottom:1px solid var(--line);
+              flex-wrap:wrap; border-radius:10px; }
+  .row-item:hover { background:var(--surface-2); }
+  .row-item .who { flex:1; min-width:200px; font-weight:500; display:flex; align-items:center; }
+  .row-item input[type=text] { max-width:240px; }
+  .switch { display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; font-size:14px; font-weight:500; margin:0; }
+  .switch input { appearance:none; -webkit-appearance:none; width:46px; height:27px; border-radius:99px;
+                  background:var(--line-strong); position:relative; cursor:pointer; transition:.2s; margin:0; padding:0; max-width:none; }
+  .switch input::after { content:""; position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%;
+                         background:#fff; transition:.2s; box-shadow:0 1px 4px rgba(0,0,0,.3); }
+  .switch input:checked { background:#22c55e; }
+  .switch input:checked::after { left:22px; }
+  .switch input:focus { box-shadow:0 0 0 4px var(--green-bg); }
+
+  @media (max-width:760px) {
+    header { padding:10px 14px; } header nav > a span { display:none; } header nav > a { padding:8px 10px; }
+    main { padding:0 12px; margin:18px auto; } .card { padding:16px; } h1 { font-size:23px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="{% url 'group_list' %}">
+    <span class="brand-logo"><iconify-icon icon="solar:checklist-minimalistic-bold-duotone"></iconify-icon></span>
+    <span>Davomat</span>
+  </a>
+  <nav>
+    {% if user.is_authenticated %}
+      <a href="{% url 'group_list' %}"><iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon><span>Guruhlar</span></a>
+      {% if user.is_staff %}
+        <a href="{% url 'panel_dashboard' %}"><iconify-icon icon="solar:widget-5-bold-duotone"></iconify-icon><span>Boshqaruv</span></a>
+      {% endif %}
+      <a href="{% url 'logout' %}" onclick="event.preventDefault(); document.getElementById('lo').submit();">
+        <iconify-icon icon="solar:logout-2-bold-duotone"></iconify-icon><span>Chiqish ({{ user.username }})</span>
+      </a>
+      <form id="lo" method="post" action="{% url 'logout' %}" style="display:none">{% csrf_token %}</form>
+    {% endif %}
+    <button type="button" class="icon-btn" id="theme-toggle" aria-label="Kun va tun rejimi" title="Kun / tun">
+      <iconify-icon class="i-moon" icon="solar:moon-stars-bold-duotone"></iconify-icon>
+      <iconify-icon class="i-sun" icon="solar:sun-2-bold-duotone"></iconify-icon>
+    </button>
+  </nav>
+</header>
+
+<main>
+  {% if messages %}
+    <ul class="messages">
+      {% for m in messages %}
+        <li class="{{ m.tags }}">
+          <iconify-icon icon="{% if m.tags == 'error' %}solar:danger-circle-bold-duotone{% else %}solar:check-circle-bold-duotone{% endif %}"></iconify-icon>
+          {{ m }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<script>
+  document.getElementById('theme-toggle').addEventListener('click', function () {
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('theme', next); } catch (e) {}
+  });
+  // data-w / data-h atributlaridan kenglik va balandlikni qo'yish
+  document.querySelectorAll('[data-w]').forEach(function (el) { el.style.width = el.dataset.w + '%'; });
+  document.querySelectorAll('[data-h]').forEach(function (el) { el.style.height = el.dataset.h + '%'; });
+</script>
+</body>
+</html>

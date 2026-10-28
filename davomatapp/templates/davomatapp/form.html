@@ -1,0 +1,22 @@
+{% extends "davomatapp/base.html" %}
+{% block content %}
+<div class="card" style="max-width:560px">
+  <h1>{{ title }}</h1>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Saqlash</button>
+    {% if back %}<a class="btn secondary" href="{% url 'group_detail' back.pk %}">Bekor qilish</a>
+    {% else %}<a class="btn secondary" href="{% url 'group_list' %}">Bekor qilish</a>{% endif %}
+  </form>
+
+  {% if delete_url %}
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+    <p class="muted">Talaba ketgan bo'lsa, o'chirmasdan “Faol” belgisini olib tashlang: tarixi saqlanadi, jadvalda ko'rinmaydi.</p>
+    <form method="post" action="{{ delete_url }}"
+          onsubmit="return confirm('Talaba va uning barcha davomat yozuvlari o\'chiriladi. Davom etasizmi?')">
+      {% csrf_token %}
+      <button class="btn" style="background:var(--red)" type="submit"><iconify-icon icon="solar:trash-bin-trash-bold-duotone"></iconify-icon> Talabani o'chirish</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

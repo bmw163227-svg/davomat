@@ -1,0 +1,27 @@
+{% extends "davomatapp/panel/base.html" %}
+{% block panel %}
+<div class="page-head">
+  <div>
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<div class="muted">{{ subtitle }}</div>{% endif %}
+  </div>
+</div>
+
+<div class="card" style="max-width:640px">
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Saqlash</button>
+    <a class="btn secondary" href="{{ back_url }}">Bekor qilish</a>
+  </form>
+
+  {% if delete_url %}
+    <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+    <p class="muted">{{ delete_warning }}</p>
+    <form method="post" action="{{ delete_url }}"
+          onsubmit="return confirm('Rostdan ham o\'chirasizmi?')">
+      {% csrf_token %}
+      <button class="btn danger" type="submit"><iconify-icon icon="solar:trash-bin-trash-bold-duotone"></iconify-icon> O'chirish</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

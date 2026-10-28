@@ -1,0 +1,61 @@
+{% extends "davomatapp/panel/base.html" %}
+{% block panel %}
+<div class="page-head">
+  <div><h1>Talabalar</h1><div class="muted">Jami: {{ page.paginator.count }} ta</div></div>
+  <a class="btn" href="{% url 'panel_student_add' %}{% if group_id %}?guruh={{ group_id }}{% endif %}">+ Yangi talaba</a>
+</div>
+
+<form method="get" class="filters">
+  <input type="text" name="q" value="{{ q }}" placeholder="Ism yoki telefon…">
+  <select name="guruh">
+    <option value="">Barcha guruhlar</option>
+    {% for g in all_groups %}
+      <option value="{{ g.pk }}" {% if g.pk|stringformat:"s" == group_id %}selected{% endif %}>{{ g.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="holat">
+    <option value="">Barcha holatlar</option>
+    <option value="active" {% if status == "active" %}selected{% endif %}>Faol</option>
+    <option value="inactive" {% if status == "inactive" %}selected{% endif %}>Nofaol</option>
+  </select>
+  <button class="btn secondary" type="submit">Filtrlash</button>
+  <a class="btn secondary" href="{% url 'panel_students' %}">Tozalash</a>
+</form>
+
+<div class="card table-wrap" style="padding:0">
+  <table class="data">
+    <thead>
+      <tr><th>Talaba</th><th>Guruh</th><th>Telefon</th><th>Davomat</th><th>Holat</th><th class="right">Amallar</th></tr>
+    </thead>
+    <tbody>
+      {% for s in page.object_list %}
+        <tr>
+          <td><a class="plain" href="{% url 'student_detail' s.pk %}">{{ s.full_name }}</a></td>
+          <td>{{ s.group.name }}</td>
+          <td class="muted">{{ s.phone|default:"—" }}</td>
+          <td>
+            <span style="color:var(--green);font-weight:700">{{ s.present_count }}</span> /
+            <span style="color:var(--red);font-weight:700">{{ s.absent_count }}</span>
+            {% if s.percent is not None %}
+              <span class="tag {% if s.percent >= 80 %}green{% elif s.percent >= 50 %}amber{% else %}red{% endif %}" style="margin-left:6px">{{ s.percent }}%</span>
+            {% endif %}
+          </td>
+          <td>{% if s.is_active %}<span class="tag green">Faol</span>{% else %}<span class="tag gray">Nofaol</span>{% endif %}</td>
+          <td class="right">
+            <div class="row-actions">
+              <a class="btn secondary sm" href="{% url 'panel_student_edit' s.pk %}"><iconify-icon icon="solar:pen-2-bold-duotone"></iconify-icon></a>
+              <form method="post" action="{% url 'panel_student_delete' s.pk %}"
+                    onsubmit="return confirm('Talaba va uning davomat yozuvlari o\'chiriladi. Davom etasizmi?')">
+                {% csrf_token %}<button class="btn danger sm" type="submit"><iconify-icon icon="solar:trash-bin-trash-bold-duotone"></iconify-icon></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" style="padding:24px">Talaba topilmadi.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "davomatapp/panel/_pagination.html" %}
+</div>
+{% endblock %}

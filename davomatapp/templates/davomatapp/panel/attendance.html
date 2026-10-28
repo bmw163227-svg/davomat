@@ -1,0 +1,62 @@
+{% extends "davomatapp/panel/base.html" %}
+{% block panel %}
+<div class="page-head">
+  <div>
+    <h1>Davomat yozuvlari</h1>
+    <div class="muted">
+      Jami: {{ page.paginator.count }} ta ·
+      <span style="color:var(--green);font-weight:700">{{ totals.present }} keldi</span> ·
+      <span style="color:var(--red);font-weight:700">{{ totals.absent }} kelmadi</span>
+    </div>
+  </div>
+</div>
+
+<form method="get" class="filters">
+  <input type="text" name="q" value="{{ q }}" placeholder="Talaba ismi…">
+  <select name="guruh">
+    <option value="">Barcha guruhlar</option>
+    {% for g in all_groups %}
+      <option value="{{ g.pk }}" {% if g.pk|stringformat:"s" == group_id %}selected{% endif %}>{{ g.name }}</option>
+    {% endfor %}
+  </select>
+  <input type="date" name="sana" value="{{ date_value }}">
+  <select name="holat">
+    <option value="">Barcha holatlar</option>
+    <option value="present" {% if status == "present" %}selected{% endif %}>Keldi</option>
+    <option value="absent" {% if status == "absent" %}selected{% endif %}>Kelmadi</option>
+  </select>
+  <button class="btn secondary" type="submit">Filtrlash</button>
+  <a class="btn secondary" href="{% url 'panel_attendance' %}">Tozalash</a>
+</form>
+
+<div class="card table-wrap" style="padding:0">
+  <table class="data">
+    <thead>
+      <tr><th>Sana</th><th>Talaba</th><th>Guruh</th><th>Holat</th><th>Izoh</th><th class="right">Amallar</th></tr>
+    </thead>
+    <tbody>
+      {% for r in page %}
+        <tr>
+          <td>{{ r.date|date:"d.m.Y" }}</td>
+          <td><a class="plain" href="{% url 'student_detail' r.student.pk %}">{{ r.student.full_name }}</a></td>
+          <td>{{ r.student.group.name }}</td>
+          <td>{% if r.is_present %}<span class="tag green">Keldi</span>{% else %}<span class="tag red">Kelmadi</span>{% endif %}</td>
+          <td class="muted">{{ r.note|default:"—" }}</td>
+          <td class="right">
+            <div class="row-actions">
+              <a class="btn secondary sm" href="{% url 'panel_attendance_edit' r.pk %}"><iconify-icon icon="solar:pen-2-bold-duotone"></iconify-icon></a>
+              <form method="post" action="{% url 'panel_attendance_delete' r.pk %}"
+                    onsubmit="return confirm('Yozuv o\'chirilsinmi?')">
+                {% csrf_token %}<button class="btn danger sm" type="submit"><iconify-icon icon="solar:trash-bin-trash-bold-duotone"></iconify-icon></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" style="padding:24px">Yozuv topilmadi.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "davomatapp/panel/_pagination.html" %}
+</div>
+{% endblock %}

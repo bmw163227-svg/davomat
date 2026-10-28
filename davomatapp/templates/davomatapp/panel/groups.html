@@ -1,0 +1,41 @@
+{% extends "davomatapp/panel/base.html" %}
+{% block panel %}
+<div class="page-head">
+  <div><h1>Guruhlar</h1><div class="muted">Jami: {{ page.paginator.count }} ta</div></div>
+  <a class="btn" href="{% url 'panel_group_add' %}">+ Yangi guruh</a>
+</div>
+
+<form method="get" class="filters">
+  <input type="text" name="q" value="{{ q }}" placeholder="Guruh nomi yoki izoh…">
+  <button class="btn secondary" type="submit">Qidirish</button>
+  {% if q %}<a class="btn secondary" href="{% url 'panel_groups' %}">Tozalash</a>{% endif %}
+</form>
+
+<div class="card table-wrap" style="padding:0">
+  <table class="data">
+    <thead><tr><th>Guruh</th><th>Izoh</th><th>Faol / jami talaba</th><th class="right">Amallar</th></tr></thead>
+    <tbody>
+      {% for g in page %}
+        <tr>
+          <td><a class="plain" href="{% url 'group_detail' g.pk %}">{{ g.name }}</a></td>
+          <td class="muted">{{ g.description|default:"—" }}</td>
+          <td><span class="tag blue">{{ g.active_count }} / {{ g.student_count }}</span></td>
+          <td class="right">
+            <div class="row-actions">
+              <a class="btn secondary sm" href="{% url 'panel_student_add' %}?guruh={{ g.pk }}">+ Talaba</a>
+              <a class="btn secondary sm" href="{% url 'panel_group_edit' g.pk %}"><iconify-icon icon="solar:pen-2-bold-duotone"></iconify-icon></a>
+              <form method="post" action="{% url 'panel_group_delete' g.pk %}"
+                    onsubmit="return confirm('Guruh, undagi talabalar va davomat yozuvlari o\'chiriladi. Davom etasizmi?')">
+                {% csrf_token %}<button class="btn danger sm" type="submit"><iconify-icon icon="solar:trash-bin-trash-bold-duotone"></iconify-icon></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" style="padding:24px">Guruh topilmadi.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "davomatapp/panel/_pagination.html" %}
+</div>
+{% endblock %}

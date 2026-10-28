@@ -1,0 +1,94 @@
+{% extends "davomatapp/panel/base.html" %}
+{% block panel %}
+<div class="page-head">
+  <div>
+    <h1>Boshqaruv paneli</h1>
+    <div class="muted">{{ today|date:"d.m.Y" }}</div>
+  </div>
+  <div class="toolbar" style="margin:0">
+    <a class="btn" href="{% url 'panel_group_add' %}">+ Guruh</a>
+    <a class="btn secondary" href="{% url 'panel_student_add' %}">+ Talaba</a>
+  </div>
+</div>
+
+<div class="stats" style="margin-bottom:20px">
+  <div class="stat"><b>{{ groups_count }}</b>Guruhlar</div>
+  <div class="stat"><b>{{ active_students }}</b>Faol talabalar</div>
+  <div class="stat"><b>{{ students_count }}</b>Jami talabalar</div>
+  <div class="stat"><b>{{ records_count }}</b>Davomat yozuvlari</div>
+</div>
+
+<div class="card">
+  <h2>Bugungi davomat</h2>
+  <div class="stats">
+    <div class="stat"><b style="color:var(--green)">{{ t_present }}</b>Keldi</div>
+    <div class="stat"><b style="color:var(--red)">{{ t_absent }}</b>Kelmadi</div>
+    <div class="stat"><b>{{ t_unmarked }}</b>Belgilanmagan</div>
+    <div class="stat"><b>{% if t_percent is not None %}{{ t_percent }}%{% else %}—{% endif %}</b>Foiz</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Oxirgi 7 kun (davomat foizi)</h2>
+  <div class="chart">
+    {% for w in week %}
+      <div class="col" title="{{ w.date|date:'d.m.Y' }}: keldi {{ w.present }}, kelmadi {{ w.absent }}">
+        <div class="val">{% if w.percent is not None %}{{ w.percent }}%{% else %}—{% endif %}</div>
+        <div class="bar-wrap"><div class="bar" data-h="{{ w.percent|default:0 }}"></div></div>
+        <div class="lbl">{{ w.date|date:"d.m" }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.bar[data-h]').forEach(function (el) {
+    el.style.height = el.dataset.h + '%';
+  });
+</script>
+<div class="card table-wrap" style="padding:0">
+  <div style="padding:18px 20px 6px"><h2 style="margin:0">Guruhlar (shu oy)</h2></div>
+  <table class="data">
+    <thead><tr><th>Guruh</th><th>Talabalar</th><th>Oylik davomat</th><th class="right"></th></tr></thead>
+    <tbody>
+      {% for g in groups %}
+        <tr>
+          <td><a class="plain" href="{% url 'group_detail' g.pk %}">{{ g.name }}</a></td>
+          <td>{{ g.student_count }}</td>
+          <td>
+            {% if g.month_percent is None %}<span class="tag gray">—</span>
+            {% elif g.month_percent >= 80 %}<span class="tag green">{{ g.month_percent }}%</span>
+            {% elif g.month_percent >= 50 %}<span class="tag amber">{{ g.month_percent }}%</span>
+            {% else %}<span class="tag red">{{ g.month_percent }}%</span>{% endif %}
+          </td>
+          <td class="right"><a class="btn secondary sm" href="{% url 'panel_group_edit' g.pk %}"><iconify-icon icon="solar:pen-2-bold-duotone"></iconify-icon> Tahrirlash</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" style="padding:24px">Hali guruh yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card table-wrap" style="padding:0">
+  <div style="padding:18px 20px 6px;display:flex;justify-content:space-between;align-items:center">
+    <h2 style="margin:0">Oxirgi yozuvlar</h2>
+    <a class="btn secondary sm" href="{% url 'panel_attendance' %}">Hammasi →</a>
+  </div>
+  <table class="data">
+    <thead><tr><th>Sana</th><th>Talaba</th><th>Guruh</th><th>Holat</th></tr></thead>
+    <tbody>
+      {% for r in recent %}
+        <tr>
+          <td>{{ r.date|date:"d.m.Y" }}</td>
+          <td>{{ r.student.full_name }}</td>
+          <td>{{ r.student.group.name }}</td>
+          <td>{% if r.is_present %}<span class="tag green">Keldi</span>{% else %}<span class="tag red">Kelmadi</span>{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" style="padding:24px">Hali davomat yozuvi yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
